@@ -31,7 +31,6 @@ setInterval(
 		runCron()
 	} , 120000) 
 
-
 function runCron() {
 	mysqlConnection.query('SELECT * FROM `router`', function (error, routers, fields) {
 		if (error) throw error;

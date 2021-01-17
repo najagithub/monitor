@@ -6,6 +6,8 @@ const { exec } = require("child_process");
 var async = require('async');
 var _ = require('lodash');
 var moment = require('moment');
+var numeral = require('numeral');
+// '0.00b' bytes converter
 /* GET home page. */
 router.get('/', function (req, res, next) {
 	res.render('index', { title: 'Express' });

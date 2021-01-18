@@ -9,9 +9,7 @@ var moment = require('moment');
 var numeral = require('numeral');
 // '0.00b' bytes converter
 /* GET home page. */
-router.get('/', function (req, res, next) {
-	res.render('index', { title: 'Express' });
-});
+
 var mysqlConnection = mysql.createConnection(db);
 mysqlConnection.connect(function (err) {
 	if (err) {
@@ -137,4 +135,154 @@ function runCron() {
 		})	
 	});
 }
+
+router.get('/', function (req, res, next) {
+	res.render('index', { title: 'Express' });
+});
+
+router.get('/monitor', function (req, res, next) {
+	var query = `
+	SELECT
+		r.ip,
+		r.name AS \`lieu\`,
+		CASE WHEN o.name = 'wlan1' AND r.name = 'rdc' THEN 'rdc_gauche' WHEN o.name = 'wlan5' AND r.name = 'rdc' THEN 'rdc_droite' WHEN o.name = 'wlan1' AND r.name = '1ère étage' THEN '1ère étage' ELSE o.name
+		END AS \`name\`,
+		p.id_oid,
+		o.user,
+		SUM(p.\`bytes-in\`) AS \`bytes-in\`,
+		SUM(p.\`bytes-out\`) AS \`bytes-out\`,
+		CONCAT(
+			TRUNCATE
+				(
+					(
+						SUM(p.\`bytes-in\`) + SUM(p.\`bytes-out\`)
+					) / 1024.0,
+					2
+				),
+				' ',
+				'KB'
+		) AS 'Total en KB',
+		CONCAT(
+			TRUNCATE
+				(
+					(
+						SUM(p.\`bytes-in\`) + SUM(p.\`bytes-out\`)
+					) / 1048576.0,
+					2
+				),
+				' ',
+				'MB'
+		) AS \`Total en MB\`,
+		CONCAT(
+			TRUNCATE
+				(
+					(
+						SUM(p.\`bytes-in\`) + SUM(p.\`bytes-out\`)
+					) /(1048576.0 * 1024),
+					2
+				),
+				' ',
+				'GB'
+		) AS \`Total en GB\`,
+		DATE_FORMAT(
+			DATE_ADD(
+				MAX(p.\`date\`),
+				INTERVAL 3 HOUR
+			),
+			'%M %d, %Y %H:%i:%S'
+		) AS \`Dérnier Connexion\`,
+		CASE WHEN(
+			(
+				SUM(p.\`bytes-in\`) + SUM(p.\`bytes-out\`)
+			)
+		) > (20*1024*1024*1024) THEN 'Oui' ELSE 'Non'
+		END AS \`FUP 20 GB\`
+	FROM
+		router r,
+		oid o,
+		packets p
+	WHERE
+		r.id_router = o.router AND o.id_oid = p.id_oid AND o.name != 'ether1'
+	GROUP BY
+		p.id_oid
+	ORDER BY
+		r.name,
+		o.name
+	`;
+	mysqlConnection.query(query, function(errors, results, fields) {
+		if(errors) {
+			console.error('errors ',errors)
+		}
+		
+		res.render('monitor', { title: 'Monitor', fields, results });
+	})
+})
+
+router.get('/show/:id', function (req, res, next) {
+	console.log(req.params);
+	var query = `
+	SELECT
+		r.ip,
+		r.name AS \`lieu\`,
+		CASE WHEN o.name = 'wlan1' AND r.name = 'rdc' THEN 'rdc_gauche' WHEN o.name = 'wlan5' AND r.name = 'rdc' THEN 'rdc_droite' WHEN o.name = 'wlan1' AND r.name = '1ère étage' THEN '1ère étage' ELSE o.name
+		END AS \`name\`,
+		p.id_oid,
+		o.user,
+		SUM(p.\`bytes-in\`) AS \`bytes-in\`,
+		SUM(p.\`bytes-out\`) AS \`bytes-out\`,
+		CONCAT(
+			TRUNCATE
+				(
+					(
+						SUM(p.\`bytes-in\`) + SUM(p.\`bytes-out\`)
+					) / 1024.0,
+					2
+				),
+				' ',
+				'KB'
+		) AS 'Total en KB',
+		CONCAT(
+			TRUNCATE
+				(
+					(
+						SUM(p.\`bytes-in\`) + SUM(p.\`bytes-out\`)
+					) / 1048576.0,
+					2
+				),
+				' ',
+				'MB'
+		) AS \`Total en MB\`,
+		CONCAT(
+			TRUNCATE
+				(
+					(
+						SUM(p.\`bytes-in\`) + SUM(p.\`bytes-out\`)
+					) /(1048576.0 * 1024),
+					2
+				),
+				' ',
+				'GB'
+		) AS \`Total en GB\`,
+		DATE_FORMAT(p.date, '%Y-%m-%d') AS \`Day\`
+	FROM
+		router r,
+		oid o,
+		packets p
+	WHERE
+		r.id_router = o.router AND o.id_oid = p.id_oid AND o.id_oid = ?
+	GROUP BY
+		DATE_FORMAT(p.date, '%Y-%m-%d')
+	ORDER BY
+		DATE_FORMAT(p.date, '%Y-%m-%d')
+	`;
+	mysqlConnection.query(query, req.params.id, function(errors, results, fields) {
+		if(errors) {
+			console.error('errors ',errors)
+		}
+		res.render('show', { title: 'Show', fields, results });
+	})
+	
+})
+
+
 module.exports = router;

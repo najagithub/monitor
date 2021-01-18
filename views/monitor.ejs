@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title><%= title %></title>
+    <link rel='stylesheet' href='/stylesheets/style.css' />
+  </head>
+  <style>
+    table {
+      font-family: arial, sans-serif;
+      border-collapse: collapse;
+      width: 100%;
+    }
+    
+    td {
+      border: 1px solid #dddddd;
+      text-align: right;
+      padding: 8px;
+    }
+    th {
+      border: 1px solid #dddddd;
+      text-align: center;
+      padding: 8px;
+    }
+    
+    tr:nth-child(even) {
+      background-color: #dddddd;
+    }
+    </style>
+  <body>
+    <h1><%= title %></h1>
+    <table>
+        <tr>
+            <% for (var i =0; i <fields.length;  i++ ) { %>
+                <th><%=  fields[i].name %></th>
+            <% } %>
+        </tr>
+        <% for (var j =0; j <results.length;  j++ ) { %>
+            <tr>
+                <td><%=  results[j].ip %></td>
+                <td><%=  results[j].lieu %></td>
+                <td><%=  results[j].name %></td>
+                <td><a href="/show/<%=  results[j].id_oid %>" target="_blank"><%=  results[j].id_oid %></a></td>
+                <td><%=  results[j].user %></td>
+                <td><%=  results[j]['bytes-in'] %></td>
+                <td><%=  results[j]['bytes-out'] %></td>
+                <td><%=  results[j]['Total en KB'] %></td>
+                <td><%=  results[j]['Total en MB'] %></td>
+                <td><%=  results[j]['Total en GB'] %></td>
+                <td><%=  results[j]['Dérnier Connexion'] %></td>
+                <td><%=  results[j]['FUP 20 GB'] %></td>
+            </tr>
+        <% } %>
+        
+      </table>
+  </body>
+</html>

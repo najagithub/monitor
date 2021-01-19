@@ -276,7 +276,7 @@ router.get('/show/:id', function (req, res, next) {
 		if(errors) {
 			console.error('errors ',errors)
 		}
-		res.render('show', { title: 'Show', fields, results });
+		res.render('show', { title: 'Show', fields, results, id_oid: req.params.id });
 	})
 	
 })
@@ -292,7 +292,7 @@ router.get('/data/graph/:id', function (req, res, next) {
 	FROM
 		\`packets\`
 	WHERE
-		id_oid = 5
+		id_oid = ?
 	GROUP BY
 		DATE_FORMAT(\`date\`, '%Y-%m-%d')
 	ORDER BY

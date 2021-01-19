@@ -70,6 +70,11 @@ color: #00B7FF;
     type: 'get',
     url: '/nodejs/data/graph/'+id_oid,
     success: function (dataResult) {
+      var seriesNameConverter = {
+          'bytes-in': 'bytes-in',
+          'bytes-out': 'bytes-out',
+          'bytes-total': 'bytes-total'
+      };
         Highcharts.chart('container', {
           legend: {
             labelFormatter: function () {

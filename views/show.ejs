@@ -6,6 +6,7 @@
     <meta http-equiv="refresh" content="120">
 <script src="https://code.jquery.com/jquery-3.5.1.js" integrity="sha256-QWo7LDvxbWT2tbbQ97B53yJnYU3WhH/C8ycbRAkjPDc=" crossorigin="anonymous"></script>    
     <script src="https://code.highcharts.com/highcharts.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/numeral@2.0.6/min/numeral.min.js"></script>
   </head>
   <style>
     body {
@@ -69,9 +70,12 @@ color: #00B7FF;
     type: 'get',
     url: '/nodejs/data/graph/'+id_oid,
     success: function (dataResult) {
-console.log(dataResult)
-      //document.addEventListener('DOMContentLoaded', function () {
         Highcharts.chart('container', {
+          legend: {
+            labelFormatter: function () {
+                return seriesNameConverter[this.name];
+            }
+          },
           chart: {
               type: 'line'
           },
@@ -86,6 +90,12 @@ console.log(dataResult)
                   text: 'Bytes'
               }
           },
+          tooltip: {
+              pointFormatter: function() {
+                  return '<span style="color:{point.color}">\u25CF</span> '
+                      + seriesNameConverter[this.series.name] + ': <b>' + this.y/(1024*1024*1024)  + ' MB </b><br/>';
+              }
+          },
           plotOptions: {
               line: {
                   dataLabels: {
@@ -96,7 +106,6 @@ console.log(dataResult)
           },
           series: dataResult.data.data
         });
-     // });
     }
   })
 

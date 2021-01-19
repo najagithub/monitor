@@ -2,8 +2,11 @@
 <html>
   <head>
     <title><%= title %></title>
+<<<<<<< HEAD
     <meta http-equiv="refresh" content="120">
     <link rel='stylesheet' href='/stylesheets/style.css' />
+=======
+>>>>>>> 2996394aab3bf864b76ce4ece886cfb4e19f05e0
     <script src="https://code.highcharts.com/highcharts.js"></script>
     <script src="https://code.jquery.com/jquery-2.2.4.min.js" integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44=" crossorigin="anonymous"></script>
   </head>
@@ -67,7 +70,7 @@ color: #00B7FF;
   var id_oid = <%- JSON.stringify(id_oid) %>
   $.ajax({
     type: 'get',
-    url: '/data/graph/'+id_oid,
+    url: '/nodejs/data/graph/'+id_oid,
     success: function (dataResult) {
 
       document.addEventListener('DOMContentLoaded', function () {

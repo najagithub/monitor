@@ -4,6 +4,7 @@
     <title><%= title %></title>
     <meta http-equiv="refresh" content="120">
     <link rel='stylesheet' href='/stylesheets/style.css' />
+    <script src="https://code.highcharts.com/highcharts.js"></script>
   </head>
   <style>
     body {
@@ -59,8 +60,35 @@ color: #00B7FF;
                 <td><%=  results[j]['Day'] %></td>
             </tr>
         <% } %>
-        
       </table>
+      <div id="container" style="width:100%; height:400px;"></div>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+        const chart = Highcharts.chart('container', {
+            chart: {
+                type: 'bar'
+            },
+            title: {
+                text: 'Fruit Consumption'
+            },
+            xAxis: {
+                categories: ['Apples', 'Bananas', 'Oranges']
+            },
+            yAxis: {
+                title: {
+                    text: 'Fruit eaten'
+                }
+            },
+            series: [{
+                name: 'Jane',
+                data: [1, 0, 4]
+            }, {
+                name: 'John',
+                data: [5, 7, 3]
+            }]
+        });
+    });
+  </script>
   </body>
   
 </html>

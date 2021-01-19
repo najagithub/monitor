@@ -2,9 +2,19 @@
 <html>
   <head>
     <title><%= title %></title>
+    <meta http-equiv="refresh" content="120">
     <link rel='stylesheet' href='/stylesheets/style.css' />
   </head>
   <style>
+      body {
+  padding: 50px;
+  font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
+}
+
+a {
+  color: #00B7FF;
+}
+
     table {
       font-family: arial, sans-serif;
       border-collapse: collapse;
@@ -39,7 +49,7 @@
                 <td><%=  results[j].ip %></td>
                 <td><%=  results[j].lieu %></td>
                 <td><%=  results[j].name %></td>
-                <td><a href="/show/<%=  results[j].id_oid %>" target="_blank"><%=  results[j].id_oid %></a></td>
+                <td><a href="/nodejs/show/<%=  results[j].id_oid %>" target="_blank"><%=  results[j].id_oid %></a></td>
                 <td><%=  results[j].user %></td>
                 <td><%=  results[j]['bytes-in'] %></td>
                 <td><%=  results[j]['bytes-out'] %></td>

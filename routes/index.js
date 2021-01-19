@@ -143,60 +143,57 @@ router.get('/', function (req, res, next) {
 router.get('/monitor', function (req, res, next) {
 	var query = `
 	SELECT
-		r.ip,
-		r.name AS \`lieu\`,
-		CASE WHEN o.name = 'wlan1' AND r.name = 'rdc' THEN 'rdc_gauche' WHEN o.name = 'wlan5' AND r.name = 'rdc' THEN 'rdc_droite' WHEN o.name = 'wlan1' AND r.name = '1ère étage' THEN '1ère étage' ELSE o.name
-		END AS \`name\`,
-		p.id_oid,
-		o.user,
-		SUM(p.\`bytes-in\`) AS \`bytes-in\`,
-		SUM(p.\`bytes-out\`) AS \`bytes-out\`,
-		CONCAT(
-			TRUNCATE
-				(
-					(
-						SUM(p.\`bytes-in\`) + SUM(p.\`bytes-out\`)
-					) / 1024.0,
-					2
-				),
-				' ',
-				'KB'
-		) AS 'Total en KB',
-		CONCAT(
-			TRUNCATE
-				(
-					(
-						SUM(p.\`bytes-in\`) + SUM(p.\`bytes-out\`)
-					) / 1048576.0,
-					2
-				),
-				' ',
-				'MB'
-		) AS \`Total en MB\`,
-		CONCAT(
-			TRUNCATE
-				(
-					(
-						SUM(p.\`bytes-in\`) + SUM(p.\`bytes-out\`)
-					) /(1048576.0 * 1024),
-					2
-				),
-				' ',
-				'GB'
-		) AS \`Total en GB\`,
-		DATE_FORMAT(
-			DATE_ADD(
-				MAX(p.\`date\`),
-				INTERVAL 3 HOUR
-			),
-			'%M %d, %Y %H:%i:%S'
-		) AS \`Dérnier Connexion\`,
-		CASE WHEN(
+    r.ip,
+    r.name AS \`lieu\`,
+    CASE WHEN o.name = 'wlan1' AND r.name = 'rdc' THEN 'rdc_gauche' WHEN o.name = 'wlan5' AND r.name = 'rdc' THEN 'rdc_droite' WHEN o.name = 'wlan1' AND r.name = '1ère étage' THEN '1ère étage' ELSE o.name
+	END AS \`name\`,
+	p.id_oid,
+	o.user,
+	SUM(p.\`bytes-in\`) AS \`bytes-in\`,
+	SUM(p.\`bytes-out\`) AS \`bytes-out\`,
+	CONCAT(
+		TRUNCATE
 			(
-				SUM(p.\`bytes-in\`) + SUM(p.\`bytes-out\`)
-			)
-		) > (20*1024*1024*1024) THEN 'Oui' ELSE 'Non'
-		END AS \`FUP 20 GB\`
+				(
+					SUM(p.\`bytes-in\`) + SUM(p.\`bytes-out\`)
+				) / 1024.0,
+				2
+			),
+			' ',
+			'KB'
+	) AS 'Total en KB',
+	CONCAT(
+		TRUNCATE
+			(
+				(
+					SUM(p.\`bytes-in\`) + SUM(p.\`bytes-out\`)
+				) / 1048576.0,
+				2
+			),
+			' ',
+			'MB'
+	) AS \`Total en MB\`,
+	CONCAT(
+		TRUNCATE
+			(
+				(
+					SUM(p.\`bytes-in\`) + SUM(p.\`bytes-out\`)
+				) /(1048576.0 * 1024),
+				2
+			),
+			' ',
+			'GB'
+	) AS \`Total en GB\`,
+	DATE_FORMAT(
+			MAX(p.\`date\`),
+		'%M %d, %Y %H:%i:%S'
+	) AS \`Dérnier Connexion\`,
+	CASE WHEN(
+		(
+			SUM(p.\`bytes-in\`) + SUM(p.\`bytes-out\`)
+		)
+	) > (20*1024*1024*1024) THEN 'Oui' ELSE 'Non'
+	END AS \`FUP 20 GB\`
 	FROM
 		router r,
 		oid o,

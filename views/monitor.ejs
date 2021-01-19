@@ -4,17 +4,18 @@
     <title><%= title %></title>
 
     <meta http-equiv="refresh" content="120">
-    
+    <script src="https://code.jquery.com/jquery-3.5.1.js" integrity="sha256-QWo7LDvxbWT2tbbQ97B53yJnYU3WhH/C8ycbRAkjPDc=" crossorigin="anonymous"></script>    
+    <script src="https://code.highcharts.com/highcharts.js"></script>
   </head>
   <style>
-      body {
-  padding: 50px;
-  font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
-}
+    body {
+      padding: 50px;
+      font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
+    }
 
-a {
-  color: #00B7FF;
-}
+    a {
+      color: #00B7FF;
+    }
 
     table {
       font-family: arial, sans-serif;
@@ -40,28 +41,73 @@ a {
   <body>
     <h1><%= title %></h1>
     <table>
-        <tr>
-            <% for (var i =0; i <fields.length;  i++ ) { %>
-                <th><%=  fields[i].name %></th>
-            <% } %>
-        </tr>
-        <% for (var j =0; j <results.length;  j++ ) { %>
-            <tr>
-                <td><%=  results[j].ip %></td>
-                <td><%=  results[j].lieu %></td>
-                <td><%=  results[j].name %></td>
-                <td><a href="/nodejs/show/<%=  results[j].id_oid %>" target="_blank"><%=  results[j].id_oid %></a></td>
-                <td><%=  results[j].user %></td>
-                <td><%=  results[j]['bytes-in'] %></td>
-                <td><%=  results[j]['bytes-out'] %></td>
-                <td><%=  results[j]['Total en KB'] %></td>
-                <td><%=  results[j]['Total en MB'] %></td>
-                <td><%=  results[j]['Total en GB'] %></td>
-                <td><%=  results[j]['Dérnier Connexion'] %></td>
-                <td><%=  results[j]['FUP 20 GB'] %></td>
-            </tr>
-        <% } %>
-        
-      </table>
+      <tr>
+          <% for (var i =0; i <fields.length;  i++ ) { %>
+              <th><%=  fields[i].name %></th>
+          <% } %>
+      </tr>
+      <% for (var j =0; j <results.length;  j++ ) { %>
+          <tr>
+              <td><%=  results[j].ip %></td>
+              <td><%=  results[j].lieu %></td>
+              <td><%=  results[j].name %></td>
+              <td><a href="/nodejs/show/<%=  results[j].id_oid %>" target="_blank"><%=  results[j].id_oid %></a></td>
+              <td><%=  results[j].user %></td>
+              <td><%=  results[j]['bytes-in'] %></td>
+              <td><%=  results[j]['bytes-out'] %></td>
+              <td><%=  results[j]['Total en KB'] %></td>
+              <td><%=  results[j]['Total en MB'] %></td>
+              <td><%=  results[j]['Total en GB'] %></td>
+              <td><%=  results[j]['Dérnier Connexion'] %></td>
+              <td><%=  results[j]['FUP 20 GB'] %></td>
+          </tr>
+      <% } %>
+    </table>
+    <div id="container" style="width:100%; height:400px;"></div>
+    <script>
+      $.ajax({
+        type: 'get',
+        url: '/nodejs/data/allgraph',
+        success: function (dataResult) {
+          const months = ["JAN", "FEB", "MAR","APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
+      let current_datetime = new Date()
+      let formatted_date = current_datetime.getDate() + "-" + months[current_datetime.getMonth()]
+          Highcharts.chart('container', {
+            
+          chart: {
+              type: 'line'
+          },
+          title: {
+              text: 'Consomation M To '+formatted_date+' daily en GigaBytes'
+          },
+          xAxis: {
+              categories: dataResult.data.categories
+          },
+          yAxis: {
+              title: {
+                  text: 'GigaBytes'
+              }
+          },
+          tooltip: {
+              pointFormatter: function() {
+                  return '<span style="color:{point.color}">\u25CF</span> Bytes-total : <b>'  + this.y  + ' GB </b><br/>';
+              }
+          },
+          plotOptions: {
+              line: {
+                  dataLabels: {
+                      enabled: true
+                  },
+                  enableMouseTracking: true
+              }
+          },
+          series: dataResult.data.data,
+          credits: {
+            enabled: false
+          }
+        });
+        }
+      })
+    </script>
   </body>
 </html>

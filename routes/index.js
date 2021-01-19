@@ -18,14 +18,6 @@ mysqlConnection.connect(function (err) {
 		console.log('Database connection successful');
 	}
 });
-/*
-mysqlConnection.end(function (err) {
-	// Function to close database connection
-	if (err) {
-		console.log('err on connect db ', err)
-	}
-});
-*/
 setInterval(
 	function() {
 		runCron()
@@ -34,7 +26,6 @@ setInterval(
 function runCron() {
 	mysqlConnection.query('SELECT * FROM `router`', function (error, routers, fields) {
 		if (error) throw error;
-		// console.log(routers);
 		async.eachLimit(routers, 1, function(router, callback_router) {
 			var ip = router.ip;
 
@@ -58,7 +49,6 @@ function runCron() {
 								console.log(`stderr: ${stderr}`);
 								return;
 							}
-							////console.log(`stdout: ${stdout}`);
 
 							
 							var stdout_parse = parseInt(stdout.split(' ').pop());
@@ -76,24 +66,16 @@ function runCron() {
 						value_oid['id_oid'] = id_oid;
 						// var query = " SELECT max(date) date_m, max(`bytes-in`) 'bytes-in',max(`bytes-out`) 'bytes-out', MAX(id_) id_ FROM packets WHERE id_oid = "+id_oid+" and DATE_FORMAT(date, '%Y-%m') = '"+moment().format('YYYY-MM')+"'"
 						var query = " SELECT * from packets WHERE id_ in (SELECT MAX(id_) id_ FROM packets WHERE id_oid = "+id_oid+" and DATE_FORMAT(date, '%Y-%m') = '"+moment().format('YYYY-MM')+"')"
-						console.log('query ',query)
 						//
 						mysqlConnection.query(query, function (error_check, result_check, fields_check) {
-							console.log('result_check ',result_check)
 							if(result_check.length>0) {
-								// 2914111607 -- 114110254
-								// 2918894154 -- 114563193
 								var bytes_total = parseInt(result_check[0]['bytes-in']) + parseInt(result_check[0]['bytes-out']);
 								var bytes_total_insert = parseInt(value_oid['bytes-in']) + parseInt(value_oid['bytes-out']);
-								console.log('bytes_total ',bytes_total)
-								console.log('bytes_total_insert ',bytes_total_insert)
 								if (bytes_total>bytes_total_insert) {
 									mysqlConnection.query('insert into `packets` set ? ', value_oid, function(error_insert, result_insert) {
 										if(error_insert) {
 											console.log('error_insert ',error_insert);
 										}
-										console.log('result_insert ',result_insert)
-										console.log('insert a',value_oid);
 										callback_oid()
 									})
 								} else {
@@ -101,8 +83,6 @@ function runCron() {
 										if(error_update) {
 											console.log('error_update ',error_update);
 										}
-										console.log('result_update ',result_update)
-										console.log('update ', value_oid);
 										callback_oid()
 									})
 								}
@@ -111,8 +91,6 @@ function runCron() {
 									if(error_insert) {
 										console.log('error_insert ',error_insert);
 									}
-									console.log('result_insert ',result_insert)
-									console.log(value_oid);
 									callback_oid()
 								})
 							}
@@ -216,7 +194,6 @@ router.get('/monitor', function (req, res, next) {
 })
 
 router.get('/show/:id', function (req, res, next) {
-	console.log(req.params);
 	var query = `
 	SELECT
 		r.ip,
@@ -282,7 +259,6 @@ router.get('/show/:id', function (req, res, next) {
 })
 
 router.get('/data/graph/:id', function (req, res, next) {
-	console.log(req.params);
 	var query = `
 	SELECT
 		SUM(\`bytes-in\`) AS \`bytes-in\`,
@@ -306,28 +282,102 @@ router.get('/data/graph/:id', function (req, res, next) {
 			categories: [],
 			data: [
 				{
-					name:"bytes-in",
+					name:"Download",
 					data: []
 				},
 				{
-					name:"bytes-out",
+					name:"Upload",
 					data: []
 				},
 				{
-					name:"bytes-total",
+					name:"Total",
 					data: []
 				}
 			]
 		};
 		results.forEach(function(item) {
 			dat.categories.push(item.date)
-			dat.data[0].data.push(item['bytes-in'])
-			dat.data[1].data.push(item['bytes-out'])
-			dat.data[2].data.push(item['bytes-total'])
+			dat.data[0].data.push(parseFloat((item['bytes-in']/(1024*1024*1024)).toFixed(2)))
+			dat.data[1].data.push(parseFloat((item['bytes-out']/(1024*1024*1024)).toFixed(2)))
+			dat.data[2].data.push(parseFloat((item['bytes-total']/(1024*1024*1024)).toFixed(2)))
 		})
 		res.json({
 			data: dat
 		});
+	})
+})
+
+router.get('/data/allgraph', function (req, res, next) {
+	var query = `
+	SELECT
+		o.\`user\`,
+		DATE_FORMAT(p.\`date\`, '%Y-%m-%d') AS \`date\`,
+		(
+			SUM(p.\`bytes-in\`) + SUM(p.\`bytes-out\`)
+		) AS \`bytes-total\`
+	FROM
+		\`oid\` o
+	INNER JOIN \`packets\` p ON
+		p.\`id_oid\` = o.\`id_oid\`
+	WHERE
+		o.\`name\` != 'ether1'
+	GROUP BY
+		DATE_FORMAT(p.\`date\`, '%Y-%m-%d'),
+		o.\`user\`
+	ORDER BY
+		o.\`user\` ASC,
+		DATE_FORMAT(p.\`date\`, '%Y-%m-%d')
+	`;
+	mysqlConnection.query(query, function(errors, results, fields) {
+		if(errors) {
+			console.error('errors ',errors)
+		}
+
+		var dat = {
+			categories: [],
+			data: []
+		};
+
+		async.each(results, function(item, callback) {
+
+			if(dat.categories.indexOf(item.date) == -1) {
+				dat.categories.push(item.date)
+			}
+			dat.categories = dat.categories.sort(function(a,b){
+				return new Date(a) - new Date(b);
+			});
+			
+			if(_.findIndex(dat.data, function(o) {
+				return o.name == item.user
+			}) == -1) {
+				dat.data.push({
+					name: item.user,
+					data: []
+				})
+			} 
+			callback();
+		}, function (error) {
+			dat.categories.forEach(function(date) {
+				dat.data.forEach(function(user) {
+					if(_.findIndex(results, function (o) {
+						return o.user == user.name && o.date == date
+					}) == -1) {
+						user.data.push(0)
+					} else {
+						var id = _.findIndex(results, function (o) {
+							return o.user == user.name && o.date == date
+						})
+						user.data.push(parseFloat((results[id]['bytes-total']/ (1024*1024*1024)).toFixed(2)))
+					}
+				})
+			})
+
+			res.json({
+				data: dat
+			});
+		})
+
+
 	})
 })
 

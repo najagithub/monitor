@@ -281,5 +281,55 @@ router.get('/show/:id', function (req, res, next) {
 	
 })
 
+router.get('/data/graph/:id', function (req, res, next) {
+	console.log(req.params);
+	var query = `
+	SELECT
+		SUM(\`bytes-in\`) AS \`bytes-in\`,
+		SUM(\`bytes-out\`) AS \`bytes-out\`,
+		(SUM(\`bytes-in\`) + SUM(\`bytes-out\`)) AS 'bytes-total',
+		DATE_FORMAT(\`date\`, '%Y-%m-%d') AS \`date\`
+	FROM
+		\`packets\`
+	WHERE
+		id_oid = 5
+	GROUP BY
+		DATE_FORMAT(\`date\`, '%Y-%m-%d')
+	ORDER BY
+		DATE_FORMAT(\`date\`, '%Y-%m-%d')
+	`;
+	mysqlConnection.query(query, req.params.id, function(errors, results, fields) {
+		if(errors) {
+			console.error('errors ',errors)
+		}
+		var dat = {
+			categories: [],
+			data: [
+				{
+					name:"bytes-in",
+					data: []
+				},
+				{
+					name:"bytes-out",
+					data: []
+				},
+				{
+					name:"bytes-total",
+					data: []
+				}
+			]
+		};
+		results.forEach(function(item) {
+			dat.categories.push(item.date)
+			dat.data[0].data.push(item['bytes-in'])
+			dat.data[1].data.push(item['bytes-out'])
+			dat.data[2].data.push(item['bytes-total'])
+		})
+		res.json({
+			data: dat
+		});
+	})
+})
+
 
 module.exports = router;

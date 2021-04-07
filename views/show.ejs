@@ -67,7 +67,7 @@
   var id_oid = <%- JSON.stringify(id_oid) %>
   $.ajax({
     type: 'get',
-    url: '/nodejs/data/graph/'+id_oid,
+    url: '/data/graph/'+id_oid,
     success: function (dataResult) {
       var seriesNameConverter = {
           'Download': 'Download',

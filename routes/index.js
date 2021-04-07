@@ -13,7 +13,7 @@ var numeral = require('numeral');
 var mysqlConnection = mysql.createConnection(db);
 mysqlConnection.connect(function (err) {
 	if (err) {
-		console.log('Database connection error');
+		console.log('Database connection error ',err);
 	} else {
 		console.log('Database connection successful');
 	}

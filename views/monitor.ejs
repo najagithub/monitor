@@ -51,7 +51,7 @@
               <td><%=  results[j].ip %></td>
               <td><%=  results[j].lieu %></td>
               <td><%=  results[j].name %></td>
-              <td><a href="/nodejs/show/<%=  results[j].id_oid %>" target="_blank"><%=  results[j].id_oid %></a></td>
+              <td><a href="/show/<%=  results[j].id_oid %>" target="_blank"><%=  results[j].id_oid %></a></td>
               <td><%=  results[j].user %></td>
               <td><%=  results[j]['bytes-in'] %></td>
               <td><%=  results[j]['bytes-out'] %></td>
@@ -67,7 +67,7 @@
     <script>
       $.ajax({
         type: 'get',
-        url: '/nodejs/data/allgraph',
+        url: '/data/allgraph',
         success: function (dataResult) {
           const months = ["JAN", "FEB", "MAR","APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
       let current_datetime = new Date()

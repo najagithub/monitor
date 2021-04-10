@@ -201,6 +201,19 @@ router.get('/monitor', function (req, res, next) {
 	})
 })
 
+router.get('/update_max_usage', function(req, res, next) {
+	var query = req.query;
+	console.log('query ',query)
+	mysqlConnection.query(`
+	update oid set usage_max = ${parseInt(query.max_usage)} where id_oid = ${query.idoid}
+	`, function(error , result ) {
+		res.json({
+			success: true
+		})
+	})
+	
+})
+
 router.get('/show/:id', function (req, res, next) {
 	var query = `
 	SELECT

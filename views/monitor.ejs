@@ -3,7 +3,7 @@
   <head>
     <title><%= title %></title>
 
-    <meta http-equiv="refresh" content="120">
+    <meta http-equiv="refresh" content="30">
     <script src="https://code.jquery.com/jquery-3.5.1.js" integrity="sha256-QWo7LDvxbWT2tbbQ97B53yJnYU3WhH/C8ycbRAkjPDc=" crossorigin="anonymous"></script>    
     <script src="https://code.highcharts.com/highcharts.js"></script>
   </head>
@@ -59,7 +59,9 @@
               <td><%=  results[j]['Total en MB'] %></td>
               <td><%=  results[j]['Total en GB'] %></td>
               <td><%=  results[j]['Dérnier Connexion'] %></td>
+              <td><%=  results[j]['Max Usage'] %></td>
               <td><%=  results[j]['FUP 20 GB'] %></td>
+              <td><%=  results[j]['Bloquer'] %></td>
           </tr>
       <% } %>
     </table>

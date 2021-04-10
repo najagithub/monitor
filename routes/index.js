@@ -21,7 +21,7 @@ mysqlConnection.connect(function (err) {
 setInterval(
 	function() {
 		runCron()
-	} , 120000) 
+	} , 30000) 
 
 function runCron() {
 	mysqlConnection.query('SELECT * FROM `router`', function (error, routers, fields) {
@@ -113,6 +113,76 @@ function runCron() {
 		})	
 	});
 }
+setInterval(
+	function() {
+		checkMaxUsage()
+	} , 15000) 
+//checkMaxUsage()
+function checkMaxUsage() {
+	mysqlConnection.query(`
+	select * from monitor.oid_list a
+	ORDER BY
+		a.name,
+		a.name
+	`, function (error, oids, fields) {
+		if (error) throw error;
+		async.eachLimit(oids, 1, function(oid, callback_oid) {
+			//console.log('oid ',oid)
+			if(oid.usage >= oid.max_usage && oid.actual_status == 1) {
+				console.log('tokony tapaka')
+				exec(`ssh admin@${oid.ip} "interface ${oid.type} disable ${oid.name}" `, (error, stdout, stderr) => {
+					if (error) {
+						console.log(`error: ${error.message}`);
+						return;
+					}
+					if (stderr) {
+						console.log(`stderr: ${stderr}`);
+						return;
+					}
+					
+					mysqlConnection.query(`
+					update oid set actual_status = 0 where id_oid = ${oid.id_oid}
+					`, function (error_update, result_update) {
+						if(error_update) {
+							console.log('error_update actual_status ',error_update);
+						}
+						callback_oid();
+					})
+				})
+			} else if (oid.usage < oid.max_usage && oid.actual_status == 0) {
+				console.log('tokony alefa')
+				exec(`ssh admin@${oid.ip} "interface ${oid.type} enable ${oid.name}" `,  (error, stdout, stderr) => {
+					if (error) {
+						console.log(`error: ${error.message}`);
+						return;
+					}
+					if (stderr) {
+						console.log(`stderr: ${stderr}`);
+						return;
+					}
+					mysqlConnection.query(`
+					update oid set actual_status = 1 where id_oid = ${oid.id_oid}
+					`, function (error_update, result_update) {
+						if(error_update) {
+							console.log('error_update actual_status ',error_update);
+						}
+						callback_oid();
+					})
+
+				})
+			} else {
+				callback_oid();
+			}
+		}, function (error_oid) {
+			if( oids.length = 0 ) {
+				console.log('vide ');
+			}
+			if (error_oid) {
+				console.error('error_oid ',error_oid);
+			}
+		})
+	});
+}
 
 router.get('/', function (req, res, next) {
 	res.render('index', { title: 'Express' });
@@ -120,69 +190,7 @@ router.get('/', function (req, res, next) {
 
 router.get('/monitor', function (req, res, next) {
 	var query = `
-	SELECT
-    r.ip,
-    r.name AS \`lieu\`,
-    CASE WHEN o.name = 'wlan1' AND r.name = 'rdc' THEN 'rdc_gauche' WHEN o.name = 'wlan5' AND r.name = 'rdc' THEN 'rdc_droite' WHEN o.name = 'wlan1' AND r.name = '1ère étage' THEN '1ère étage' ELSE o.name
-	END AS \`name\`,
-	p.id_oid,
-	o.user,
-	SUM(p.\`bytes-in\`) AS \`bytes-in\`,
-	SUM(p.\`bytes-out\`) AS \`bytes-out\`,
-	CONCAT(
-		TRUNCATE
-			(
-				(
-					SUM(p.\`bytes-in\`) + SUM(p.\`bytes-out\`)
-				) / 1024.0,
-				2
-			),
-			' ',
-			'KB'
-	) AS 'Total en KB',
-	CONCAT(
-		TRUNCATE
-			(
-				(
-					SUM(p.\`bytes-in\`) + SUM(p.\`bytes-out\`)
-				) / 1048576.0,
-				2
-			),
-			' ',
-			'MB'
-	) AS \`Total en MB\`,
-	CONCAT(
-		TRUNCATE
-			(
-				(
-					SUM(p.\`bytes-in\`) + SUM(p.\`bytes-out\`)
-				) /(1048576.0 * 1024),
-				2
-			),
-			' ',
-			'GB'
-	) AS \`Total en GB\`,
-	DATE_FORMAT(
-			MAX(p.\`date\`),
-		'%M %d, %Y %H:%i:%S'
-	) AS \`Dérnier Connexion\`,
-	CASE WHEN(
-		(
-			SUM(p.\`bytes-in\`) + SUM(p.\`bytes-out\`)
-		)
-	) > (20*1024*1024*1024) THEN 'Oui' ELSE 'Non'
-	END AS \`FUP 20 GB\`
-	FROM
-		router r,
-		oid o,
-		packets p
-	WHERE
-		r.id_router = o.router AND o.id_oid = p.id_oid AND o.name != 'ether1'
-	GROUP BY
-		p.id_oid
-	ORDER BY
-		r.name,
-		o.name
+	SELECT * FROM monitor.oid_monitor
 	`;
 	mysqlConnection.query(query, function(errors, results, fields) {
 		if(errors) {

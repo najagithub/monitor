@@ -49,7 +49,6 @@
       <% for (var j =0; j <results.length;  j++ ) { %>
           <tr>
               <td><%=  results[j].ip %></td>
-              <td><%=  results[j].lieu %></td>
               <td><%=  results[j].name %></td>
               <td><a href="/show/<%=  results[j].id_oid %>" target="_blank"><%=  results[j].id_oid %></a></td>
               <td><%=  results[j].user %></td>
@@ -59,7 +58,7 @@
               <td><%=  results[j]['Total en MB'] %></td>
               <td><%=  results[j]['Total en GB'] %></td>
               <td><%=  results[j]['Dérnier Connexion'] %></td>
-              <td><%=  results[j]['Max Usage'] %></td>
+              <td><a href="#" ><%=  results[j]['Max Usage'] %></a></td>
               <td><%=  results[j]['FUP 20 GB'] %></td>
               <td><%=  results[j]['Bloquer'] %></td>
           </tr>

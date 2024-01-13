@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title><%= title %></title>
+
+		<meta http-equiv="refresh" content="60">
+		<!-- Latest compiled and minified CSS -->
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+
+		<!-- Optional theme -->
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+		<script src="https://code.jquery.com/jquery-3.5.1.js" integrity="sha256-QWo7LDvxbWT2tbbQ97B53yJnYU3WhH/C8ycbRAkjPDc=" crossorigin="anonymous"></script>    
+		<script src="https://code.highcharts.com/highcharts.js"></script>
+		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-confirm/3.3.2/jquery-confirm.min.css">
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-confirm/3.3.2/jquery-confirm.min.js"></script>
+	</head>
+	<style>
+		body {
+		padding: 50px;
+		font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
+		}
+
+		a {
+		color: #00B7FF;
+		}
+
+		table {
+		font-family: arial, sans-serif;
+		border-collapse: collapse;
+		width: 100%;
+		}
+		
+		td {
+		border: 1px solid #dddddd;
+		text-align: right;
+		padding: 8px;
+		}
+		th {
+		border: 1px solid #dddddd;
+		text-align: center;
+		padding: 8px;
+		}
+		
+		tr:nth-child(even) {
+		background-color: #dddddd;
+		}
+	</style>
+	<body>
+		<h1><%= title %></h1>
+		<form class="form-horizontal col-sm-6" action="/reset" method="POST">
+			<!-- Champ de saisie de date -->
+			<div class="form-group">
+			  <label class="control-label col-sm-2" for="dateReset">Date:</label>
+			  <div class="col-sm-4">
+				<input type="date" class="form-control" id="dateReset" name="dateReset">
+			  </div>
+			</div>
+	  
+			<!-- Bouton avec ic  ne de réinitialisation -->
+			<div class="form-group">
+			  <div class="col-sm-offset-2 col-sm-4">
+				<button type="submit" class="btn btn-default">
+				  <span class="glyphicon glyphicon-refresh"></span> Réinitialiser
+				</button>
+			  </div>
+			</div>
+		</form>
+	  
+		<table>
+			<tr>
+				<% for (var i =0; i <fields.length;  i++ ) { %>
+				<% if (fields[i].name != 'type_affichage' ) { %>
+				<th><%=  fields[i].name %></th>
+				<% } %>
+				<% } %>
+			</tr>
+			<% for (var j =0; j <results.length;  j++ ) { %>
+			<tr>
+				<td><%=  results[j].ip %></td>
+				<td><%=  results[j].lieu %></td>
+				<td>
+					<a href="#" class="nameEdit" id="nameEdit_<%=  results[j].id_oid %>" data-idoid="<%=  results[j].id_oid %>">
+						<%=  results[j].name %>
+					</a>
+				</td>
+				<td><a href="/show/<%=  results[j].id_oid %>?type_affichage=<%=  results[j].type_affichage %>" target="_blank"><%=  results[j].id_oid %></a></td>
+				<td>
+					<a href="#" class="userEdit" id="userEdit_<%=  results[j].id_oid %>" data-idoid="<%=  results[j].id_oid %>">
+						<%=  results[j].user %>
+					</a>
+				</td>
+				<td><%=  results[j]['bytes-in'] %></td>
+				<td><%=  results[j]['bytes-out'] %></td>
+				<td><%=  results[j]['Total en KB'] %></td>
+				<td><%=  results[j]['Total en MB'] %></td>
+				<td><%=  results[j]['Total en GB'] %></td>
+				<td><%=  results[j]['Dérnier Connexion'] %></td>
+				<td>
+					<a href="#" class="maxUsageEdit" id="maxUsageEdit_<%=  results[j].id_oid %>" data-idoid="<%=  results[j].id_oid %>">
+						<%=  results[j]['Max Usage'] %>
+					</a>
+				</td>
+				<td><%=  results[j]['FUP 20 GB'] %></td>
+				<td><%=  results[j]['Bloquer'] %></td>
+			</tr>
+			<% } %>
+		</table>
+		<div id="container" style="width:100%; height:400px;"></div>
+		<script>
+			$.ajax({
+				type: 'get',
+				url: '/data/allgraph',
+				success: function (dataResult) {
+				const months = ["JAN", "FEB", "MAR","APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
+				let current_datetime = new Date()
+				let formatted_date = current_datetime.getDate() + "-" + months[current_datetime.getMonth()]
+				Highcharts.chart('container', {
+					
+					chart: {
+						type: 'line'
+					},
+					title: {
+						text: 'Consomation M To '+formatted_date+' daily en GigaBytes'
+					},
+					xAxis: {
+						categories: dataResult.data.categories
+					},
+					yAxis: {
+						title: {
+							text: 'GigaBytes'
+						}
+					},
+					tooltip: {
+						pointFormatter: function() {
+							return '<span style="color:{point.color}">\u25CF</span> Bytes-total : <b>'  + this.y  + ' GB </b><br/>';
+						}
+					},
+					plotOptions: {
+						line: {
+							dataLabels: {
+								enabled: true
+							},
+							enableMouseTracking: true
+						}
+					},
+					series: dataResult.data.data,
+					credits: {
+					enabled: false
+					}
+				});
+				}
+			})
+			$(document).ready(function() {
+				$('.maxUsageEdit').on('click', function() {
+					var idoid = $(this).data('idoid');
+					var idattr = $(this).attr('id');
+					
+					$.confirm({
+						title: 'Modifier Max Usage',
+						content: '' +
+						'<form action="" class="formName">' +
+						'<div class="form-group">' +
+						'<label>En GB</label>' +
+						'<input type="text" placeholder="Max usage" id="max_usage" class="max_usage form-control" value="'+parseFloat($('#'+idattr).text().replace('GB','')).toFixed(2)+'" required />' +
+						'</div>' +
+						'</form>',
+						buttons: {
+							formSubmit: {
+								text: 'Submit',
+								btnClass: 'btn-blue',
+								action: function () {
+									var max_usage = this.$content.find('.max_usage').val();
+									var first_value = max_usage;
+									max_usage = (parseFloat(max_usage).toFixed(2)*1024*1024*1024);
+									$.ajax({
+										type: 'get',
+										url: '/update_max_usage?idoid='+idoid+'&max_usage='+max_usage,
+										success: function	(resultat) {
+											$('#'+idattr).text(parseFloat(first_value).toFixed(2)+' GB');
+										}
+									})
+								}
+							},
+							cancel: function () {
+								//close
+							},
+						},
+						onContentReady: function () {
+							// bind to events
+							var jc = this;
+							this.$content.find('form').on('submit', function (e) {
+								// if the user submits the form by pressing enter in the field.
+								e.preventDefault();
+								jc.$$formSubmit.trigger('click'); // reference the button and click it
+							});
+						}
+					});
+				})
+				$('.nameEdit').on('click', function() {
+					var idoid = $(this).data('idoid');
+					var idattr = $(this).attr('id');
+					
+					$.confirm({
+						title: 'Modifier le nom d\'interface',
+						content: '' +
+						'<form action="" class="formName">' +
+						'<div class="form-group">' +
+						'<label>Spécifier le nom d\'interface</label>' +
+						'<input type="text" placeholder="Nom d\'interface" id="interface_name" class="interface_name form-control" value="'+$('#'+idattr).text().trim()+'" required />' +
+						'</div>' +
+						'</form>',
+						buttons: {
+							formSubmit: {
+								text: 'Submit',
+								btnClass: 'btn-blue',
+								action: function () {
+									var interface_name = this.$content.find('.interface_name').val().trim();
+									var first_value = interface_name;
+									$.ajax({
+										type: 'get',
+										url: '/update_interface_name?idoid='+idoid+'&interface_name='+interface_name,
+										success: function	(resultat) {
+											$('#'+idattr).text((first_value));
+										}
+									})
+								}
+							},
+							cancel: function () {
+								//close
+							},
+						},
+						onContentReady: function () {
+							// bind to events
+							var jc = this;
+							this.$content.find('form').on('submit', function (e) {
+								// if the user submits the form by pressing enter in the field.
+								e.preventDefault();
+								jc.$$formSubmit.trigger('click'); // reference the button and click it
+							});
+						}
+					});
+				})
+				$('.userEdit').on('click', function() {
+					var idoid = $(this).data('idoid');
+					var idattr = $(this).attr('id');
+					
+					$.confirm({
+						title: 'Modifier le nom d\'utilisateur',
+						content: '' +
+						'<form action="" class="formName">' +
+						'<div class="form-group">' +
+						'<label>Spécifier le nom d\'utilisateur</label>' +
+						'<input type="text" placeholder="Nom d\'utilisateur" id="user_name" class="user_name form-control" value="'+$('#'+idattr).text().trim()+'" required />' +
+						'</div>' +
+						'</form>',
+						buttons: {
+							formSubmit: {
+								text: 'Submit',
+								btnClass: 'btn-blue',
+								action: function () {
+									var user_name = this.$content.find('.user_name').val().trim();
+									var first_value = user_name;
+									$.ajax({
+										type: 'get',
+										url: '/update_user_name?idoid='+idoid+'&user_name='+user_name,
+										success: function	(resultat) {
+											$('#'+idattr).text((first_value));
+										}
+									})
+								}
+							},
+							cancel: function () {
+								//close
+							},
+						},
+						onContentReady: function () {
+							// bind to events
+							var jc = this;
+							this.$content.find('form').on('submit', function (e) {
+								// if the user submits the form by pressing enter in the field.
+								e.preventDefault();
+								jc.$$formSubmit.trigger('click'); // reference the button and click it
+							});
+						}
+					});
+				})
+			})
+		</script>
+	</body>
+</html>

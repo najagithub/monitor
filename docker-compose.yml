@@ -1,0 +1,38 @@
+version: '3.1'
+
+services:
+  db:
+    image: mysql:8.0.34
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_USER: ${MYSQL_USER}
+      TZ: Asia/Baghdad
+    volumes:
+      - ./mysql/backup.sql:/docker-entrypoint-initdb.d/backup.sql
+      - ./data-mysql:/var/lib/mysql
+    ports:
+      - 3306:3306
+  phpmyadmin:
+    image: phpmyadmin
+    restart: always
+    ports:
+      - 3030:80
+    environment:
+      - PMA_ARBITRARY=1
+    depends_on:
+      - db
+  web:
+    build: .
+    restart: always
+    ports:
+      - 3000:3000
+    depends_on:
+      - db
+    volumes:
+      - node_modules_volume:/app/node_modules
+      - ./app:/app:ro
+volumes:
+  node_modules_volume:

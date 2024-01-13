@@ -1,0 +1,14 @@
+node v10.19
+npm 6.14.4
+
+PING
+apt-get update -y
+apt-get install -y iputils-ping
+
+SSH
+sudo apt-get install openssh-client
+
+SSHPASS
+sudo apt-get install sshpass
+
+sshpass -f mdppass ssh -o StrictHostKeyChecking=no admin@192.168.88.242 "interface ethernet disable ether4"
